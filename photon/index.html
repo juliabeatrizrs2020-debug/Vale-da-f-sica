@@ -328,7 +328,7 @@ burst(e.x,e.y,"#ff5577");enemies.splice(i,1);
 cores.forEach(c=>{
 if(!c.got&&hit(player,c)){
 c.got=true;collected++;score+=50;
-energy=Math.min(100,energy+10);
+energy=Math.min(difficultySettings[difficulty].energy,energy+10);
 burst(c.x,c.y,"#62f5ff");
 }
 });
@@ -338,7 +338,9 @@ p.x+=p.vx*step;p.y+=p.vy*step;p.life-=step;
 particles=particles.filter(p=>p.life>0);
 score+=Math.floor(step);updateHud();
 if(energy<=0){end(false);return}
-if(collected===3){end(true);return}
+if(collected===3){
+advanceLevel();
+}
 }
 function draw(){
 ctx.clearRect(0,0,W,H);
