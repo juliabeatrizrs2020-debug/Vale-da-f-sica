@@ -183,6 +183,7 @@ shots.push({x:player.x,y:player.y-18,v:-8,r:4});
 shotTimer=13;
 }
 
+
 function burst(x,y,color){
 const maxParticles=180;
 
@@ -193,20 +194,20 @@ let a=Math.random()*Math.PI*2;
 let v=Math.random()*3+1;
 
 particles.push({
-x,y,
+x:x,
+y:y,
 vx:Math.cos(a)*v,
 vy:Math.sin(a)*v,
 life:30,
-color
+color:color
 });
 }
 }
-for(let i=0;i<9;i++){
-let a=Math.random()*Math.PI*2,v=Math.random()*3+1;
-particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:28,color});
+
+function hit(a,b){
+return Math.hypot(a.x-b.x,a.y-b.y)<a.r+b.r;
 }
-}
-function hit(a,b){return Math.hypot(a.x-b.x,a.y-b.y)<a.r+b.r;}
+
 function update(dt){
 let step=Math.min(dt/16.67,2),dx=0,dy=0;
 if(keys.left||keys.arrowleft)dx--;
