@@ -114,7 +114,7 @@ spawn=0;
 
 relays.forEach(r=>r.got=false);
 
-energy=Math.min(100,energy+10);
+energy=Math.min(difficultySettings[difficulty].energy,energy+10);
 
 updateHud();
 }
