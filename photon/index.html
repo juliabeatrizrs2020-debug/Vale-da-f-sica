@@ -399,20 +399,76 @@ ctx.restore();if(player.hit>0)player.hit--;
 function end(win){
 running=false;
 
-let best=Number(localStorage.getItem("photonBest")||0);
-if(score>best){
-best=score;
-localStorage.setItem("photonBest",best);
+const labels={
+easy:"FÁCIL",
+medium:"MÉDIO",
+hard:"DIFÍCIL"
+};
+
+const escapeHTML=value=>String(value).replace(/[&<>"']/g,c=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#39;"
+}[c]));
+
+const result={
+name:playerName||"Jogador",
+difficulty:difficulty,
+score:Number(score)||0,
+level:Number(level)||1,
+cores:Number(collected)||0,
+won:win,
+date:new Date().toLocaleString("pt-BR")
+};
+
+let history=[];
+
+try{
+history=JSON.parse(localStorage.getItem("photonHistory")||"[]");
+if(!Array.isArray(history))history=[];
+}catch(error){
+history=[];
 }
 
+history.unshift(result);
+history=history.slice(0,20);
+
+localStorage.setItem("photonHistory",JSON.stringify(history));
+
+const bestKey="photonBest_"+difficulty;
+let best=Math.max(Number(localStorage.getItem(bestKey)||0),result.score);
+
+localStorage.setItem(bestKey,best);
+
+let overallBest=Math.max(Number(localStorage.getItem("photonBest")||0),result.score);
+localStorage.setItem("photonBest",overallBest);
+
+const recent=history.slice(0,5).map(item=>
+'<p><small>'+
+escapeHTML(item.date)+' | '+
+escapeHTML(labels[item.difficulty]||item.difficulty)+
+' | Nível '+Number(item.level)+'/10 | '+
+Number(item.score)+' pontos</small></p>'
+).join("");
+
 $("message").style.display="flex";
+
 $("message").innerHTML=
-'<div class="box"><h1>'+(win?"MISSÃO CONCLUÍDA":"FIM DE JOGO")+
-'</h1><h3>'+(win?"VOCÊ RECUPEROU A LUZ!":"A ENERGIA ACABOU")+
-'</h3><p>Jogador: '+playerName+
-'</p><p>Pontuação: '+score+
-'</p><p>Recorde neste aparelho: '+best+
-'</p><button id="again">JOGAR NOVAMENTE</button></div>';
+'<div class="box">'+
+'<h1>'+(win?"MISSÃO CONCLUÍDA":"FIM DE JOGO")+'</h1>'+
+'<h3>'+(win?"VOCÊ RECUPEROU A LUZ!":"A ENERGIA ACABOU")+'</h3>'+
+'<p>Jogador: '+escapeHTML(result.name)+'</p>'+
+'<p>Dificuldade: '+labels[difficulty]+'</p>'+
+'<p>Nível alcançado: '+level+'/10</p>'+
+'<p>Núcleos coletados: '+collected+'/3</p>'+
+'<p>Pontuação: '+score+'</p>'+
+'<p>Recorde nesta dificuldade: '+best+'</p>'+
+'<h3>ÚLTIMAS PARTIDAS</h3>'+
+(recent||"<p>Nenhuma partida registrada.</p>")+
+'<button id="again">JOGAR NOVAMENTE</button>'+
+'</div>';
 
 $("again").onclick=start;
 }
