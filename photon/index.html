@@ -106,7 +106,12 @@ small{color:#b8d9e8}
 <button id="fire">PULSO</button>
 </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const supabaseClient=window.supabase.createClient(
+  "https://kunentaanrlilgporsyq.supabase.co",
+  "sb_publishable_-TIUjNnJeRiZ8dlu4B63TA_Duymto6G"
+);
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 let W=0,H=0;
