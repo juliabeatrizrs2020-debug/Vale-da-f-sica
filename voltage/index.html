@@ -248,7 +248,7 @@ r.got=true;
 collected++;
 levelRelays++;
 score+=60;
-energy=Math.min(100,energy+8);
+energy=Math.min(difficultySettings[difficulty].energy,energy+8);
 burst(r.x,r.y,"#e5a2ff");
 }
 });
