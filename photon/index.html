@@ -93,26 +93,39 @@ const difficultySettings = {
 };
 let keys={};
 let stars=Array.from({length:90},()=>({x:Math.random(),y:Math.random(),s:Math.random()*2+0.5}));
+
 function reset(){
+level=1;
+
 player={x:W/2,y:H-100,r:14,speed:4.2,hit:0};
-enemies=[];shots=[];particles=[];
+enemies=[];
+shots=[];
+particles=[];
+
 cores=[
 {x:W*.22,y:H*.25,r:12,got:false},
 {x:W*.75,y:H*.40,r:12,got:false},
 {x:W*.48,y:H*.17,r:12,got:false}
 ];
+
 score=0;
 energy=difficultySettings[difficulty].energy;
 collected=0;
 spawn=0;
 shotTimer=0;
+
+$("level").textContent=level;
 updateHud();
 }
+
+
 function updateHud(){
 $("energy").textContent=Math.max(0,Math.floor(energy));
 $("cores").textContent=collected;
 $("score").textContent=score;
+$("level").textContent=level;
 }
+
 function start(){
 let nameField=$("playerName");
 let difficultyField=$("difficulty");
