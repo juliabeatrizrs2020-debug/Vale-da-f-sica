@@ -203,20 +203,22 @@ if(keys.pulse||keys[" "])pulse();
 if(pulseTimer>0)pulseTimer-=step;
 
 let settings=difficultySettings[difficulty];
+let multiplier=1+(level-1)*0.12;
+let spawnInterval=Math.max(300,settings.spawn*(1-(level-1)*0.065));
 
 spawn+=dt;
 
-if(spawn>settings.spawn){
+if(spawn>spawnInterval){
 spawn=0;
 
-let enemyLimit=difficulty==="easy"?12:difficulty==="medium"?20:30;
+let enemyLimit=Math.min(35,(difficulty==="easy"?12:difficulty==="medium"?20:30)+level);
 
 if(enemies.length<enemyLimit){
 enemies.push({
 x:25+Math.random()*(W-50),
 y:-25,
 r:13,
-s:settings.enemyMin+Math.random()*(settings.enemyMax-settings.enemyMin)
+s:(settings.enemyMin+Math.random()*(settings.enemyMax-settings.enemyMin))*multiplier
 });
 }
 }
