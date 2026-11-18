@@ -1,0 +1,273 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VOLTAGE: Zero Point</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080514;color:white;font-family:Arial,sans-serif;overflow:hidden;touch-action:none}
+canvas{display:block;width:100vw;height:100dvh}
+#hud{position:absolute;top:12px;left:10px;right:10px;display:flex;justify-content:space-between;gap:6px;font-size:12px}
+.panel{background:#160c2bdc;border:1px solid #bd64ff;border-radius:8px;padding:9px}
+#message{position:absolute;inset:0;background:#080514eF;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px}
+.box{max-width:430px}
+h1{color:#dc8aff;letter-spacing:4px;text-shadow:0 0 20px #a52cff}
+button{background:#291044;color:white;border:1px solid #d17cff;border-radius:10px;padding:12px 16px;font-weight:bold}
+#controls{position:absolute;bottom:16px;left:0;right:0;display:flex;justify-content:space-between;padding:0 14px}
+.group{display:flex;gap:7px}
+#controls button{width:49px;height:52px;font-size:18px;padding:4px}
+#pulse{width:70px!important;color:#f1b6ff}
+small{color:#d6c1ed}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+<div class="panel">ENERGIA: <span id="energy">100</span>%</div>
+<div class="panel">RELÉS: <span id="relays">0</span>/4</div>
+<div class="panel">PONTOS: <span id="score">0</span></div>
+</div>
+<div id="message">
+<div class="box">
+<h1>VOLTAGE</h1>
+<h3>ZERO POINT</h3>
+<p>Recupere os quatro relés e domine o campo elétrico.</p>
+<p><small>Use as cargas positivas e negativas a seu favor. Desvie dos drones!</small></p>
+<button id="start">INICIAR MISSÃO</button>
+</div>
+</div>
+<div id="controls">
+<div class="group">
+<button id="left">◀</button>
+<button id="right">▶</button>
+</div>
+<div class="group">
+<button id="up">▲</button>
+<button id="down">▼</button>
+<button id="pulse">PULSO</button>
+</div>
+</div>
+<script>
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+let W=0,H=0;
+function resize(){
+W=innerWidth;H=innerHeight;
+canvas.width=W*devicePixelRatio;
+canvas.height=H*devicePixelRatio;
+ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+addEventListener("resize",resize);resize();
+const $=id=>document.getElementById(id);
+let player,enemies,relays,charges,pulses,particles;
+let score,energy,collected,running=false,last=0,spawn=0,pulseTimer=0;
+let keys={};
+let stars=Array.from({length:100},()=>({x:Math.random(),y:Math.random(),s:Math.random()*2+0.5}));
+
+function reset(){
+player={x:W/2,y:H-100,r:14,speed:4.1,hit:0};
+enemies=[];pulses=[];particles=[];
+relays=[
+{x:W*.2,y:H*.22,r:12,got:false},
+{x:W*.8,y:H*.35,r:12,got:false},
+{x:W*.35,y:H*.52,r:12,got:false},
+{x:W*.7,y:H*.18,r:12,got:false}
+];
+charges=[
+{x:W*.25,y:H*.4,q:1,r:17},
+{x:W*.72,y:H*.55,q:-1,r:17},
+{x:W*.5,y:H*.28,q:1,r:17}
+];
+score=0;energy=100;collected=0;spawn=0;pulseTimer=0;
+updateHud();
+}
+function updateHud(){
+$("energy").textContent=Math.max(0,Math.floor(energy));
+$("relays").textContent=collected;
+$("score").textContent=score;
+}
+function start(){
+reset();running=true;
+$("message").style.display="none";
+last=performance.now();
+requestAnimationFrame(loop);
+}
+$("start").onclick=start;
+
+function bind(id,key){
+const b=$(id);
+b.addEventListener("pointerdown",e=>{
+e.preventDefault();keys[key]=true;b.setPointerCapture(e.pointerId);
+});
+["pointerup","pointercancel","lostpointercapture"].forEach(ev=>b.addEventListener(ev,()=>keys[key]=false));
+}
+bind("left","left");bind("right","right");
+bind("up","up");bind("down","down");bind("pulse","pulse");
+addEventListener("keydown",e=>keys[e.key.toLowerCase()]=true);
+addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+
+function burst(x,y,color){
+for(let i=0;i<12;i++){
+let a=Math.random()*Math.PI*2,v=Math.random()*3+1;
+particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:30,color});
+}
+}
+function hit(a,b){return Math.hypot(a.x-b.x,a.y-b.y)<a.r+b.r;}
+function fieldForce(x,y){
+let fx=0,fy=0;
+charges.forEach(c=>{
+let dx=x-c.x,dy=y-c.y;
+let d2=Math.max(400,dx*dx+dy*dy);
+let strength=c.q*1800/d2;
+fx+=dx*strength;fy+=dy*strength;
+});
+return {x:fx,y:fy};
+}
+function pulse(){
+if(pulseTimer>0)return;
+pulses.push({x:player.x,y:player.y,r:12,max:125});
+pulseTimer=90;
+}
+function update(dt){
+let step=Math.min(dt/16.67,2);
+let dx=0,dy=0;
+if(keys.left||keys.arrowleft)dx--;
+if(keys.right||keys.arrowright)dx++;
+if(keys.up||keys.arrowup)dy--;
+if(keys.down||keys.arrowdown)dy++;
+if(dx&&dy){dx*=.707;dy*=.707}
+let force=fieldForce(player.x,player.y);
+player.x=Math.max(18,Math.min(W-18,player.x+(dx*player.speed+force.x)*step));
+player.y=Math.max(65,Math.min(H-35,player.y+(dy*player.speed+force.y)*step));
+if(keys.pulse||keys[" "])pulse();
+if(pulseTimer>0)pulseTimer-=step;
+
+spawn+=dt;
+if(spawn>1150){
+spawn=0;
+enemies.push({x:25+Math.random()*(W-50),y:-25,r:13,s:1.3+Math.random()*1.2});
+}
+enemies.forEach(e=>{
+let f=fieldForce(e.x,e.y);
+e.x+=f.x*.35*step;
+e.y+=(e.s+f.y*.2)*step;
+});
+pulses.forEach(p=>p.r=Math.min(p.max,p.r+5*step));
+pulses=pulses.filter(p=>p.r<p.max);
+for(let i=enemies.length-1;i>=0;i--){
+let e=enemies[i],destroyed=false;
+for(let p of pulses){
+if(Math.hypot(e.x-p.x,e.y-p.y)<p.r){
+burst(e.x,e.y,"#d58aff");score+=20;
+enemies.splice(i,1);destroyed=true;break;
+}
+}
+if(destroyed)continue;
+if(hit(player,e)){
+energy-=15;player.hit=12;
+burst(e.x,e.y,"#ff4fbd");
+enemies.splice(i,1);
+}else if(e.y>H+20)enemies.splice(i,1);
+}
+relays.forEach(r=>{
+if(!r.got&&hit(player,r)){
+r.got=true;collected++;score+=60;
+energy=Math.min(100,energy+8);
+burst(r.x,r.y,"#e5a2ff");
+}
+});
+charges.forEach(c=>{
+let dx=player.x-c.x,dy=player.y-c.y;
+let d=Math.hypot(dx,dy);
+if(d<30){
+energy-=.04*step;
+}
+});
+particles.forEach(p=>{
+p.x+=p.vx*step;p.y+=p.vy*step;p.life-=step;
+});
+particles=particles.filter(p=>p.life>0);
+score+=Math.floor(step);
+updateHud();
+if(energy<=0){end(false);return}
+if(collected===4){end(true);return}
+}
+function draw(){
+ctx.clearRect(0,0,W,H);
+let grd=ctx.createLinearGradient(0,0,0,H);
+grd.addColorStop(0,"#180b35");
+grd.addColorStop(1,"#050511");
+ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+stars.forEach(s=>{
+s.y+=.0006;if(s.y>1)s.y=0;
+ctx.globalAlpha=.3+s.s*.2;ctx.fillStyle="#d69aff";
+ctx.fillRect(s.x*W,s.y*H,s.s,s.s);
+});
+ctx.globalAlpha=1;
+ctx.strokeStyle="#44246b";
+for(let x=0;x<W;x+=40){
+ctx.beginPath();ctx.moveTo(x,H*.35);ctx.lineTo(x,H);ctx.stroke();
+}
+for(let y=H*.35;y<H;y+=35){
+ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
+}
+charges.forEach(c=>{
+ctx.save();ctx.shadowBlur=22;
+ctx.shadowColor=c.q>0?"#ff5c9f":"#54bfff";
+ctx.fillStyle=c.q>0?"#ff5c9f":"#54bfff";
+ctx.beginPath();ctx.arc(c.x,c.y,c.r,0,Math.PI*2);ctx.fill();
+ctx.fillStyle="#fff";ctx.font="bold 23px Arial";
+ctx.textAlign="center";ctx.textBaseline="middle";
+ctx.fillText(c.q>0?"+":"−",c.x,c.y);
+ctx.restore();
+});
+relays.forEach(r=>{
+if(r.got)return;
+ctx.save();ctx.shadowBlur=22;ctx.shadowColor="#d98aff";
+ctx.strokeStyle="#edbaff";ctx.lineWidth=3;
+ctx.beginPath();ctx.arc(r.x,r.y,r.r+Math.sin(Date.now()/180)*3,0,Math.PI*2);ctx.stroke();
+ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(r.x,r.y,4,0,Math.PI*2);ctx.fill();
+ctx.restore();
+});
+pulses.forEach(p=>{
+ctx.strokeStyle="#efb0ff";ctx.lineWidth=3;ctx.globalAlpha=.7;
+ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.stroke();
+});
+ctx.globalAlpha=1;
+enemies.forEach(e=>{
+ctx.save();ctx.shadowBlur=17;ctx.shadowColor="#ff48bf";
+ctx.fillStyle="#a22c8e";ctx.beginPath();
+ctx.moveTo(e.x,e.y-e.r);ctx.lineTo(e.x+e.r,e.y);
+ctx.lineTo(e.x,e.y+e.r);ctx.lineTo(e.x-e.r,e.y);
+ctx.closePath();ctx.fill();ctx.restore();
+});
+particles.forEach(p=>{
+ctx.globalAlpha=Math.max(0,p.life/30);
+ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,3,3);
+});
+ctx.globalAlpha=1;
+ctx.save();ctx.translate(player.x,player.y);
+ctx.shadowBlur=24;ctx.shadowColor="#d38aff";
+ctx.fillStyle=player.hit>0?"#ff5577":"#c778ff";
+ctx.beginPath();ctx.moveTo(0,-19);ctx.lineTo(15,14);
+ctx.lineTo(0,8);ctx.lineTo(-15,14);ctx.closePath();ctx.fill();
+ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(0,-3,4,0,Math.PI*2);ctx.fill();
+ctx.restore();if(player.hit>0)player.hit--;
+}
+function end(win){
+running=false;$("message").style.display="flex";
+$("message").innerHTML='<div class="box"><h1>'+(win?"MISSÃO CONCLUÍDA":"FIM DE JOGO")+'</h1><h3>'+(win?"CAMPO ELÉTRICO DOMINADO!":"ENERGIA ESGOTADA")+'</h3><p>Pontuação: '+score+'</p><button id="again">JOGAR NOVAMENTE</button></div>';
+$("again").onclick=start;
+}
+function loop(now){
+if(!running)return;
+let dt=now-last;last=now;
+update(dt);draw();
+if(running)requestAnimationFrame(loop);
+}
+reset();draw();
+</script>
+</body>
+</html>
