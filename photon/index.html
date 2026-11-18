@@ -18,7 +18,15 @@ button{background:#082b48;color:white;border:1px solid #26eaff;border-radius:10p
 input,select{font-size:16px!important;max-width:100%;box-sizing:border-box}
 #controls{position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:space-between;padding:0 15px}
 .group{display:flex;gap:7px}
-#controls button{width:48px;height:52px;font-size:18px;padding:5px}
+#controls button{
+width:48px;
+height:52px;
+font-size:18px;
+padding:5px;
+touch-action:none;
+-webkit-user-select:none;
+user-select:none;
+}
 #fire{width:68px!important;color:#70f8ff}
 small{color:#b8d9e8}
 </style>
@@ -179,12 +187,11 @@ $("start").onclick=start;
 
 const activePointers = new Map();
 
-function releasePointer(pointerId){
-if(!activePointers.has(pointerId))return;
+function releasePointer(id){
+if(!activePointers.has(id))return;
 
-const key=activePointers.get(pointerId);
-activePointers.delete(pointerId);
-
+const key=activePointers.get(id);
+activePointers.delete(id);
 keys[key]=[...activePointers.values()].includes(key);
 }
 
@@ -193,12 +200,16 @@ const button=$(id);
 
 button.addEventListener("pointerdown",e=>{
 e.preventDefault();
+
 activePointers.set(e.pointerId,key);
 keys[key]=true;
+
+try{
+button.setPointerCapture(e.pointerId);
+}catch(error){}
 });
 
 button.addEventListener("pointerup",e=>{
-e.preventDefault();
 releasePointer(e.pointerId);
 });
 
@@ -220,24 +231,16 @@ bind("fire","fire");
 window.addEventListener("pointerup",e=>releasePointer(e.pointerId));
 window.addEventListener("pointercancel",e=>releasePointer(e.pointerId));
 
-window.addEventListener("keydown",e=>{
-const key=e.key.toLowerCase();
-if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(key))e.preventDefault();
-keys[key]=true;
+window.addEventListener("blur",()=>{
+activePointers.clear();
+keys={};
 });
 
-window.addEventListener("keyup",e=>{
-keys[e.key.toLowerCase()]=false;
-});
-
-function clearControls(){
+document.addEventListener("visibilitychange",()=>{
+if(document.hidden){
 activePointers.clear();
 keys={};
 }
-
-window.addEventListener("blur",clearControls);
-document.addEventListener("visibilitychange",()=>{
-if(document.hidden)clearControls();
 });
 
 
