@@ -186,9 +186,13 @@ player.y=Math.max(65,Math.min(H-35,player.y+dy*player.speed*step));
 if(keys.fire||keys[" "])shoot();
 if(shotTimer>0)shotTimer-=step;
 spawn+=dt;
+
 if(spawn>difficultySettings[difficulty].spawn){
 spawn=0;
+
+if(enemies.length<18){
 let settings=difficultySettings[difficulty];
+
 enemies.push({
 x:30+Math.random()*(W-60),
 y:-25,
@@ -196,6 +200,8 @@ r:13,
 s:settings.enemyMin+Math.random()*(settings.enemyMax-settings.enemyMin)
 });
 }
+}
+
 shots.forEach(s=>s.y+=s.v*step);
 shots=shots.filter(s=>s.y>-20);
 enemies.forEach(e=>e.y+=e.s*step);
