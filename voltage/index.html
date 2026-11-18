@@ -119,10 +119,17 @@ function fieldForce(x,y){
 let fx=0,fy=0;
 charges.forEach(c=>{
 let dx=x-c.x,dy=y-c.y;
-let d2=Math.max(400,dx*dx+dy*dy);
-let strength=c.q*1800/d2;
-fx+=dx*strength;fy+=dy*strength;
+let d2=Math.max(900,dx*dx+dy*dy);
+let d=Math.sqrt(d2);
+let strength=c.q*900/d2;
+fx+=(dx/d)*strength;
+fy+=(dy/d)*strength;
 });
+let magnitude=Math.hypot(fx,fy);
+if(magnitude>1.25){
+fx=fx/magnitude*1.25;
+fy=fy/magnitude*1.25;
+}
 return {x:fx,y:fy};
 }
 function pulse(){
