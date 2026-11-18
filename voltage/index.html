@@ -100,6 +100,24 @@ charges=[
 score=0;energy=100;collected=0;level=1;levelRelays=0;spawn=0;pulseTimer=0;
 updateHud();
 }
+function advanceLevel(){
+if(level>=10){
+end(true);
+return;
+}
+
+level++;
+levelRelays=0;
+collected=0;
+enemies=[];
+spawn=0;
+
+relays.forEach(r=>r.got=false);
+
+energy=Math.min(100,energy+10);
+
+updateHud();
+}
 function updateHud(){
 $("energy").textContent=Math.max(0,Math.floor(energy));
 $("relays").textContent=collected;
