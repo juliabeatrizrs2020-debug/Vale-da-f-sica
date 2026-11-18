@@ -88,6 +88,17 @@ function updateHud(){
 $("energy").textContent=Math.max(0,Math.floor(energy));
 $("relays").textContent=collected;
 $("score").textContent=score;
+
+if(player && charges){
+let potential=0;
+
+charges.forEach(c=>{
+let distance=Math.max(0.5,Math.hypot(player.x-c.x,player.y-c.y)/50);
+potential+=c.q/distance;
+});
+
+$("potential").textContent=(potential*10).toFixed(2);
+}
 }
 function start(){
 reset();running=true;
