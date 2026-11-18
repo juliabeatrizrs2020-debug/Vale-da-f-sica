@@ -133,17 +133,50 @@ last=performance.now();
 requestAnimationFrame(loop);
 }
 $("start").onclick=start;
+
 function bind(id,key){
 const b=$(id);
+
 b.addEventListener("pointerdown",e=>{
-e.preventDefault();keys[key]=true;b.setPointerCapture(e.pointerId);
+e.preventDefault();
+keys[key]=true;
+
+try{
+b.setPointerCapture(e.pointerId);
+}catch(error){}
 });
-["pointerup","pointercancel","lostpointercapture"].forEach(ev=>b.addEventListener(ev,()=>keys[key]=false));
+
+["pointerup","pointercancel","lostpointercapture"].forEach(ev=>{
+b.addEventListener(ev,e=>{
+keys[key]=false;
+});
+});
 }
-bind("left","left");bind("right","right");
-bind("up","up");bind("down","down");bind("fire","fire");
-addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;});
-addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false;});
+
+bind("left","left");
+bind("right","right");
+bind("up","up");
+bind("down","down");
+bind("fire","fire");
+
+addEventListener("keydown",e=>{
+keys[e.key.toLowerCase()]=true;
+});
+
+addEventListener("keyup",e=>{
+keys[e.key.toLowerCase()]=false;
+});
+
+function clearControls(){
+keys={};
+}
+
+addEventListener("blur",clearControls);
+
+document.addEventListener("visibilitychange",()=>{
+if(document.hidden)clearControls();
+});
+
 function shoot(){
 if(shotTimer>0)return;
 shots.push({x:player.x,y:player.y-18,v:-8,r:4});
