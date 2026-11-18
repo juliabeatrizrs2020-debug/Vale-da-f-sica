@@ -35,6 +35,16 @@ small{color:#b8d9e8}
 <h3>BREAK THE LIGHT</h3>
 <p>Recupere os três núcleos de luz e sobreviva aos drones.</p>
 <p><small>Desvie dos inimigos e dispare pulsos de fótons.</small></p>
+<label for="playerName">SEU NOME OU APELIDO</label>
+<input id="playerName" type="text" maxlength="16" placeholder="Digite seu nome">
+
+<label for="difficulty">NÍVEL DE DIFICULDADE</label>
+<select id="difficulty">
+  <option value="easy">FÁCIL</option>
+  <option value="medium" selected>MÉDIO</option>
+  <option value="hard">DIFÍCIL</option>
+</select>
+
 <button id="start">INICIAR MISSÃO</button>
 </div>
 </div>
@@ -62,6 +72,15 @@ ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
 addEventListener("resize",resize);resize();
 const $=id=>document.getElementById(id);
 let player,enemies,cores,shots,particles,score,energy,collected,running=false,last=0,spawn=0,shotTimer=0;
+
+let playerName = "";
+let difficulty = "medium";
+
+const difficultySettings = {
+  easy: {spawn:1450, enemyMin:1.0, enemyMax:1.7, energy:120},
+  medium: {spawn:1050, enemyMin:1.4, enemyMax:2.5, energy:100},
+  hard: {spawn:750, enemyMin:2.0, enemyMax:3.2, energy:80}
+};
 let keys={};
 let stars=Array.from({length:90},()=>({x:Math.random(),y:Math.random(),s:Math.random()*2+0.5}));
 function reset(){
@@ -72,7 +91,12 @@ cores=[
 {x:W*.75,y:H*.40,r:12,got:false},
 {x:W*.48,y:H*.17,r:12,got:false}
 ];
-score=0;energy=100;collected=0;spawn=0;shotTimer=0;updateHud();
+score=0;
+energy=difficultySettings[difficulty].energy;
+collected=0;
+spawn=0;
+shotTimer=0;
+updateHud();
 }
 function updateHud(){
 $("energy").textContent=Math.max(0,Math.floor(energy));
@@ -80,7 +104,14 @@ $("cores").textContent=collected;
 $("score").textContent=score;
 }
 function start(){
-reset();running=true;
+playerName=$("playerName").value.trim();
+if(!playerName){
+alert("Digite seu nome ou apelido!");
+return;
+}
+difficulty=$("difficulty").value;
+reset();
+running=true;
 $("message").style.display="none";
 last=performance.now();
 requestAnimationFrame(loop);
@@ -121,9 +152,15 @@ player.y=Math.max(65,Math.min(H-35,player.y+dy*player.speed*step));
 if(keys.fire||keys[" "])shoot();
 if(shotTimer>0)shotTimer-=step;
 spawn+=dt;
-if(spawn>1050){
+if(spawn>difficultySettings[difficulty].spawn){
 spawn=0;
-enemies.push({x:30+Math.random()*(W-60),y:-25,r:13,s:1.4+Math.random()*1.1});
+let settings=difficultySettings[difficulty];
+enemies.push({
+x:30+Math.random()*(W-60),
+y:-25,
+r:13,
+s:settings.enemyMin+Math.random()*(settings.enemyMax-settings.enemyMin)
+});
 }
 shots.forEach(s=>s.y+=s.v*step);
 shots=shots.filter(s=>s.y>-20);
@@ -208,8 +245,23 @@ ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(0,-3,4,0,Math.PI*2);ctx.fill();
 ctx.restore();if(player.hit>0)player.hit--;
 }
 function end(win){
-running=false;$("message").style.display="flex";
-$("message").innerHTML='<div class="box"><h1>'+(win?"MISSÃO CONCLUÍDA":"FIM DE JOGO")+'</h1><h3>'+(win?"VOCÊ RECUPEROU A LUZ!":"A ENERGIA ACABOU")+'</h3><p>Pontuação: '+score+'</p><button id="again">JOGAR NOVAMENTE</button></div>';
+running=false;
+
+let best=Number(localStorage.getItem("photonBest")||0);
+if(score>best){
+best=score;
+localStorage.setItem("photonBest",best);
+}
+
+$("message").style.display="flex";
+$("message").innerHTML=
+'<div class="box"><h1>'+(win?"MISSÃO CONCLUÍDA":"FIM DE JOGO")+
+'</h1><h3>'+(win?"VOCÊ RECUPEROU A LUZ!":"A ENERGIA ACABOU")+
+'</h3><p>Jogador: '+playerName+
+'</p><p>Pontuação: '+score+
+'</p><p>Recorde neste aparelho: '+best+
+'</p><button id="again">JOGAR NOVAMENTE</button></div>';
+
 $("again").onclick=start;
 }
 function loop(now){
