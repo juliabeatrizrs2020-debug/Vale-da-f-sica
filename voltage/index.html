@@ -244,11 +244,18 @@ enemies.splice(i,1);
 }
 relays.forEach(r=>{
 if(!r.got&&hit(player,r)){
-r.got=true;collected++;score+=60;
+r.got=true;
+collected++;
+levelRelays++;
+score+=60;
 energy=Math.min(100,energy+8);
 burst(r.x,r.y,"#e5a2ff");
 }
 });
+
+if(levelRelays>=4){
+advanceLevel();
+}
 charges.forEach(c=>{
 let dx=player.x-c.x,dy=player.y-c.y;
 let d=Math.hypot(dx,dy);
