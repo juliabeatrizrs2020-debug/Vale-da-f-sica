@@ -337,9 +337,15 @@ p.x+=p.vx*step;p.y+=p.vy*step;p.life-=step;
 });
 particles=particles.filter(p=>p.life>0);
 score+=Math.floor(step);updateHud();
-if(energy<=0){end(false);return}
+
 if(collected===3){
 advanceLevel();
+return;
+}
+
+if(energy<=0){
+end(false);
+return;
 }
 }
 function draw(){
