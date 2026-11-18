@@ -184,42 +184,28 @@ requestAnimationFrame(loop);
 }
 $("start").onclick=start;
 
-
 const activePointers = new Map();
 
-function releasePointer(id){
+function releaseTouch(id){
 if(!activePointers.has(id))return;
 
 const key=activePointers.get(id);
 activePointers.delete(id);
+
 keys[key]=[...activePointers.values()].includes(key);
 }
 
 function bind(id,key){
 const button=$(id);
 
-button.addEventListener("pointerdown",e=>{
+button.addEventListener("touchstart",e=>{
 e.preventDefault();
 
-activePointers.set(e.pointerId,key);
+for(const touch of e.changedTouches){
+activePointers.set(touch.identifier,key);
 keys[key]=true;
-
-try{
-button.setPointerCapture(e.pointerId);
-}catch(error){}
-});
-
-button.addEventListener("pointerup",e=>{
-releasePointer(e.pointerId);
-});
-
-button.addEventListener("pointercancel",e=>{
-releasePointer(e.pointerId);
-});
-
-button.addEventListener("lostpointercapture",e=>{
-releasePointer(e.pointerId);
-});
+}
+},{passive:false});
 }
 
 bind("left","left");
@@ -228,21 +214,32 @@ bind("up","up");
 bind("down","down");
 bind("fire","fire");
 
-window.addEventListener("pointerup",e=>releasePointer(e.pointerId));
-window.addEventListener("pointercancel",e=>releasePointer(e.pointerId));
+window.addEventListener("touchend",e=>{
+for(const touch of e.changedTouches){
+releaseTouch(touch.identifier);
+}
+},{passive:false});
 
-window.addEventListener("blur",()=>{
-activePointers.clear();
-keys={};
-});
+window.addEventListener("touchcancel",e=>{
+for(const touch of e.changedTouches){
+releaseTouch(touch.identifier);
+}
+},{passive:false});
 
-document.addEventListener("visibilitychange",()=>{
-if(document.hidden){
+window.addEventListener("touchmove",e=>{
+e.preventDefault();
+},{passive:false});
+
+function clearControls(){
 activePointers.clear();
 keys={};
 }
-});
 
+window.addEventListener("blur",clearControls);
+
+document.addEventListener("visibilitychange",()=>{
+if(document.hidden)clearControls();
+});
 
 function shoot(){
 if(shotTimer>0)return;
