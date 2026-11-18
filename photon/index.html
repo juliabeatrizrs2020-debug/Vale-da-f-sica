@@ -513,6 +513,66 @@ $("message").innerHTML=
 '</div>';
 
 $("again").onclick=start;
+const rankingPanel=document.createElement("div");
+rankingPanel.innerHTML=
+'<h3>RANKING GLOBAL</h3>'+
+'<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">'+
+'<button id="rankEasy">FÁCIL</button>'+
+'<button id="rankMedium">MÉDIO</button>'+
+'<button id="rankHard">DIFÍCIL</button>'+
+'</div>'+
+'<div id="globalRanking"><p>Enviando pontuação...</p></div>';
+
+$("again").parentElement.insertBefore(rankingPanel,$("again"));
+
+async function loadRanking(selectedDifficulty){
+const box=$("globalRanking");
+box.innerHTML="<p>Carregando...</p>";
+
+const {data,error}=await supabaseClient
+.from("rankings")
+.select("player_name,score,level,cores")
+.eq("game","photon")
+.eq("difficulty",selectedDifficulty)
+.order("score",{ascending:false})
+.limit(10);
+
+if(error){
+box.textContent="Erro ao carregar o ranking.";
+return;
+}
+
+if(!data.length){
+box.textContent="Ainda não há pontuações nesta dificuldade.";
+return;
+}
+
+box.innerHTML=data.map((item,index)=>
+'<p><strong>'+(index+1)+'º '+escapeHTML(item.player_name)+'</strong>'+
+'<br><small>'+Number(item.score)+' pontos | Nível '+
+Number(item.level)+'/10 | '+Number(item.cores)+'/3 núcleos</small></p>'
+).join("");
+}
+
+$("rankEasy").onclick=()=>loadRanking("easy");
+$("rankMedium").onclick=()=>loadRanking("medium");
+$("rankHard").onclick=()=>loadRanking("hard");
+
+const {error:saveError}=await supabaseClient.from("rankings").insert({
+player_name:result.name,
+game:"photon",
+difficulty:result.difficulty,
+score:result.score,
+level:result.level,
+cores:result.cores,
+won:result.won
+});
+
+if(saveError){
+$("globalRanking").textContent="Não foi possível enviar sua pontuação.";
+}else{
+await loadRanking(difficulty);
+}
 }
 function loop(now){
 if(!running)return;
