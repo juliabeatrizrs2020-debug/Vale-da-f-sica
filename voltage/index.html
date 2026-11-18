@@ -116,7 +116,11 @@ $("potential").textContent=(potential*10).toFixed(2);
 }
 }
 function start(){
-reset();running=true;
+difficulty=$("difficulty").value;
+reset();
+energy=difficultySettings[difficulty].energy;
+updateHud();
+running=true;
 $("message").style.display="none";
 last=performance.now();
 requestAnimationFrame(loop);
