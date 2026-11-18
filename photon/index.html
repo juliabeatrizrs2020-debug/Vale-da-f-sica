@@ -105,12 +105,21 @@ $("cores").textContent=collected;
 $("score").textContent=score;
 }
 function start(){
-playerName=$("playerName").value.trim();
+let nameField=$("playerName");
+let difficultyField=$("difficulty");
+
+if(nameField){
+playerName=nameField.value.trim();
 if(!playerName){
 alert("Digite seu nome ou apelido!");
 return;
 }
-difficulty=$("difficulty").value;
+}
+
+if(difficultyField){
+difficulty=difficultyField.value;
+}
+
 reset();
 running=true;
 $("message").style.display="none";
