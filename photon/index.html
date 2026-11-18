@@ -126,6 +126,32 @@ $("score").textContent=score;
 $("level").textContent=level;
 }
 
+function createCores(){
+return [
+{x:W*.22,y:H*.25,r:12,got:false},
+{x:W*.75,y:H*.40,r:12,got:false},
+{x:W*.48,y:H*.17,r:12,got:false}
+];
+}
+
+function advanceLevel(){
+if(level>=maxLevel){
+end(true);
+return;
+}
+
+level++;
+collected=0;
+cores=createCores();
+enemies=[];
+shots=[];
+spawn=0;
+
+energy=Math.min(difficultySettings[difficulty].energy,energy+10);
+
+updateHud();
+}
+
 function start(){
 let nameField=$("playerName");
 let difficultyField=$("difficulty");
@@ -262,20 +288,26 @@ if(keys.fire||keys[" "])shoot();
 if(shotTimer>0)shotTimer-=step;
 spawn+=dt;
 
-if(spawn>difficultySettings[difficulty].spawn){
+
+let settings=difficultySettings[difficulty];
+let spawnInterval=Math.max(260,settings.spawn*(1-(level-1)*0.075));
+let enemyLimit=Math.min(30,18+level);
+
+if(spawn>spawnInterval){
 spawn=0;
 
-if(enemies.length<18){
-let settings=difficultySettings[difficulty];
+if(enemies.length<enemyLimit){
+let multiplier=1+(level-1)*0.13;
 
 enemies.push({
 x:30+Math.random()*(W-60),
 y:-25,
 r:13,
-s:settings.enemyMin+Math.random()*(settings.enemyMax-settings.enemyMin)
+s:(settings.enemyMin+Math.random()*(settings.enemyMax-settings.enemyMin))*multiplier
 });
 }
 }
+
 
 shots.forEach(s=>s.y+=s.v*step);
 shots=shots.filter(s=>s.y>-20);
