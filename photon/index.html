@@ -438,7 +438,7 @@ ctx.lineTo(0,8);ctx.lineTo(-15,14);ctx.closePath();ctx.fill();
 ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(0,-3,4,0,Math.PI*2);ctx.fill();
 ctx.restore();if(player.hit>0)player.hit--;
 }
-function end(win){
+async function end(win){
 running=false;
 
 const labels={
