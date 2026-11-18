@@ -71,7 +71,7 @@ ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
 addEventListener("resize",resize);resize();
 const $=id=>document.getElementById(id);
 let player,enemies,relays,charges,pulses,particles;
-let score,energy,collected,running=false,last=0,spawn=0,pulseTimer=0;
+let score,energy,collected,level=1,levelRelays=0,running=false,last=0,spawn=0,pulseTimer=0;
 let difficulty="medium";
 
 const difficultySettings={
