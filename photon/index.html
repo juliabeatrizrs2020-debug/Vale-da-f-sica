@@ -180,13 +180,12 @@ $("start").onclick=start;
 const activePointers = new Map();
 
 function releasePointer(pointerId){
-const key=activePointers.get(pointerId);
-if(!key)return;
+if(!activePointers.has(pointerId))return;
 
+const key=activePointers.get(pointerId);
 activePointers.delete(pointerId);
 
-const stillPressed=[...activePointers.values()].includes(key);
-keys[key]=stillPressed;
+keys[key]=[...activePointers.values()].includes(key);
 }
 
 function bind(id,key){
@@ -194,13 +193,21 @@ const button=$(id);
 
 button.addEventListener("pointerdown",e=>{
 e.preventDefault();
-
 activePointers.set(e.pointerId,key);
 keys[key]=true;
+});
 
-try{
-button.setPointerCapture(e.pointerId);
-}catch(error){}
+button.addEventListener("pointerup",e=>{
+e.preventDefault();
+releasePointer(e.pointerId);
+});
+
+button.addEventListener("pointercancel",e=>{
+releasePointer(e.pointerId);
+});
+
+button.addEventListener("lostpointercapture",e=>{
+releasePointer(e.pointerId);
 });
 }
 
@@ -210,21 +217,12 @@ bind("up","up");
 bind("down","down");
 bind("fire","fire");
 
-window.addEventListener("pointerup",e=>{
-releasePointer(e.pointerId);
-});
-
-window.addEventListener("pointercancel",e=>{
-releasePointer(e.pointerId);
-});
+window.addEventListener("pointerup",e=>releasePointer(e.pointerId));
+window.addEventListener("pointercancel",e=>releasePointer(e.pointerId));
 
 window.addEventListener("keydown",e=>{
 const key=e.key.toLowerCase();
-
-if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(key)){
-e.preventDefault();
-}
-
+if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(key))e.preventDefault();
 keys[key]=true;
 });
 
@@ -238,7 +236,6 @@ keys={};
 }
 
 window.addEventListener("blur",clearControls);
-
 document.addEventListener("visibilitychange",()=>{
 if(document.hidden)clearControls();
 });
