@@ -12,7 +12,44 @@ canvas{display:block;width:100vw;height:100dvh}
 #hud{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;gap:8px;font-size:12px}
 .panel{background:#07152b;border:1px solid #1adfff;border-radius:8px;padding:9px}
 #message{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#020817e8;text-align:center;padding:25px}
-.box{max-width:420px}
+.box{
+width:min(420px,100%);
+max-height:88dvh;
+overflow-y:auto;
+padding:24px 20px;
+background:linear-gradient(145deg,#0b1d38,#050b1b);
+border:1px solid #26eaff;
+border-radius:18px;
+box-shadow:0 0 25px #00dfff55,inset 0 0 20px #00dfff12;
+}
+
+.box h1{
+font-size:25px;
+margin:5px 0 12px;
+}
+
+.box h3{
+color:#70eaff;
+font-size:15px;
+margin:18px 0 10px;
+}
+
+.box p{
+margin:9px 0;
+padding:7px;
+background:#102744;
+border-radius:7px;
+font-size:14px;
+}
+
+.box button{
+width:100%;
+margin-top:15px;
+}
+
+#message{
+overflow-y:auto;
+}
 h1{color:#65f5ff;letter-spacing:4px;text-shadow:0 0 20px #00dfff}
 button{background:#082b48;color:white;border:1px solid #26eaff;border-radius:10px;padding:13px 18px;font-weight:bold;font-size:16px}
 input,select{font-size:16px!important;max-width:100%;box-sizing:border-box}
