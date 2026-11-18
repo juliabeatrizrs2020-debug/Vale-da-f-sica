@@ -103,6 +103,7 @@ updateHud();
 function updateHud(){
 $("energy").textContent=Math.max(0,Math.floor(energy));
 $("relays").textContent=collected;
+$("level").textContent=level;
 $("score").textContent=score;
 
 if(player && charges){
