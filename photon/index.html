@@ -149,7 +149,25 @@ if(shotTimer>0)return;
 shots.push({x:player.x,y:player.y-18,v:-8,r:4});
 shotTimer=13;
 }
+
 function burst(x,y,color){
+const maxParticles=180;
+
+for(let i=0;i<12;i++){
+if(particles.length>=maxParticles)break;
+
+let a=Math.random()*Math.PI*2;
+let v=Math.random()*3+1;
+
+particles.push({
+x,y,
+vx:Math.cos(a)*v,
+vy:Math.sin(a)*v,
+life:30,
+color
+});
+}
+}
 for(let i=0;i<9;i++){
 let a=Math.random()*Math.PI*2,v=Math.random()*3+1;
 particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:28,color});
